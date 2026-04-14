@@ -1,2 +1,8 @@
 ﻿  patchmatch.cpp
+C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(43,21): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(44,33): warning C4244: '=': conversion from 'int' to '_Tp', possible loss of data
+C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(44,33): warning C4244:         with
+C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(44,33): warning C4244:         [
+C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(44,33): warning C4244:             _Tp=float
+C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(44,33): warning C4244:         ]
   CGRA352-Assignment2.vcxproj -> C:\Users\magnu\source\repos\CGRA352-Assignment2\x64\Debug\CGRA352-Assignment2.exe

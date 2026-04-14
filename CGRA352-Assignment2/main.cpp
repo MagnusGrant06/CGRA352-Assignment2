@@ -6,6 +6,9 @@
 #include "patchmatch.hpp"
 
 void main() {
+	cv::Mat source = cv::imread("Source.jpg");
+	cv::Mat target = cv::imread("Target.jpg");
 	PatchMatch* p = new PatchMatch();
-	p->output_image();
+	p->init(source, target);
+	p->output_info(source);
 }
