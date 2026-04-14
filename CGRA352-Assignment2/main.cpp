@@ -10,5 +10,6 @@ void main() {
 	cv::Mat target = cv::imread("Target.jpg");
 	PatchMatch* p = new PatchMatch();
 	p->init(source, target);
-	p->output_info(source);
+	p->random_search();
+	p->output_info(target);
 }

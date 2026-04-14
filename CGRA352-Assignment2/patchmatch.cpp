@@ -15,20 +15,16 @@ void PatchMatch::init(cv::Mat source, cv::Mat target) {
 	nnf = temp_nnf;
 	pixel_cost = temp_pixel_cost;
 
-	//create padded images to avoid going out of bounds when calculating patches
-	cv::Mat padded_source; 
 	cv::copyMakeBorder(source, padded_source, 0, patch_size, 0, patch_size, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
-
-	cv::Mat padded_target;
 	cv::copyMakeBorder(target, padded_target, 0, patch_size, 0, patch_size, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
 
 	std::mt19937 random(std::random_device{}());
-	std::uniform_int_distribution<int> random_col(0, source.cols);
-	std::uniform_int_distribution<int> random_row(0, source.rows);
+	std::uniform_int_distribution<int> random_col(0, source.cols-patch_size);
+	std::uniform_int_distribution<int> random_row(0, source.rows-patch_size);
 
 	//assumes source and target are the same size
-	for (int i = 0; i < source.rows; i++) {
-		for (int j = 0; j < source.cols; j++) {
+	for (int i = 0; i < padded_source.rows - patch_size; i++) {
+		for (int j = 0; j < padded_source.cols - patch_size; j++) {
 			cv::Vec2i rand_source(random_col(random), random_row(random));
 
 			cv::Rect target_patch(j, i, patch_size, patch_size);
@@ -36,35 +32,40 @@ void PatchMatch::init(cv::Mat source, cv::Mat target) {
 			
 			//calculate offset
 			cv::Vec2i& nnf_offset = nnf.at<cv::Vec2i>(i, j);
-			nnf_offset = cv::Vec2i(rand_source[0] - i, rand_source[1]- j);
+			nnf_offset = cv::Vec2i(rand_source[0] - j, rand_source[1]- i);
 
 			//calculate cost
-			int current_cost = cv::norm(padded_target(target_patch), padded_source(source_patch));
+			int current_cost = cv::norm(padded_target(target_patch), padded_source(source_patch), cv::NORM_L2SQR);
 			pixel_cost.at<float>(i, j) = current_cost;
 		}
 	}
 }
 
-void PatchMatch::random_search(cv::Mat source, cv::Mat target) {
+void PatchMatch::random_search() {
 
 	std::mt19937 random(std::random_device{}());
 
-	for (int i = 0; i < target.rows; i++) {
-		for (int j = 0; j < target.cols; j++) {
-			int row_radius = target.rows;
-			int col_radius = target.cols;
+	for (int i = 0; i < padded_target.rows - patch_size; i++) {
+		for (int j = 0; j < padded_target.cols - patch_size; j++) {
+			int row_radius = padded_target.rows;
+			int col_radius = padded_target.cols;
 
-			while (row_radius <= 1 || col_radius <= 1) {
-				std::uniform_int_distribution<int> random_col(0, col_radius);
-				std::uniform_int_distribution<int> random_row(0, row_radius);
+			while (row_radius >= 1 || col_radius >= 1) {
+				if (row_radius < patch_size || col_radius < patch_size) break;
+				int source_x = j + nnf.at<cv::Vec2i>(i, j)[0];
+				int source_y = i + nnf.at<cv::Vec2i>(i, j)[1];
+				std::uniform_int_distribution<int> random_col(-col_radius, col_radius);
+				std::uniform_int_distribution<int> random_row(-row_radius, row_radius);
 
-				cv::Point rand_point(std::max(std::min(random_row(random),target.rows),0),
-					std::max(std::min(random_col(random),target.cols),0));
+				cv::Point rand_point(
+					std::max(std::min(source_x + random_col(random),padded_target.cols-patch_size),0),
+					std::max(std::min(source_y + random_row(random),padded_target.rows-patch_size),0));
 
-				improveNNF(source, target, cv::Point(i, j), rand_point, nnf, pixel_cost);
+				improveNNF(padded_source, padded_target, cv::Point(j, i), rand_point, nnf, pixel_cost);
 
 				row_radius /= 2;
 				col_radius /= 2;
+
 
 			}
 			
@@ -75,14 +76,14 @@ void PatchMatch::random_search(cv::Mat source, cv::Mat target) {
 //simple method to compare patches, assumes they are padded
 void PatchMatch::improveNNF(cv::Mat source, cv::Mat target, cv::Point patch_coord, cv::Point source_patch_coord, cv::Mat& nnf, cv::Mat& cost_mat) {
 
-	cv::Rect source_patch(source_patch_coord, cv::Point2i(patch_size, patch_size));
-	cv::Rect target_patch(patch_coord, cv::Point2i(patch_size, patch_size));
+	cv::Rect source_patch(source_patch_coord.x,source_patch_coord.y, patch_size, patch_size);
+	cv::Rect target_patch(patch_coord.x, patch_coord.y, patch_size, patch_size);
 
-	float proposed_cost = cv::norm(source(source_patch), target(target_patch), cv::NORM_L2SQR);
+	float proposed_cost = cv::norm(padded_source(source_patch), padded_target(target_patch), cv::NORM_L2SQR);
 
-	if (proposed_cost < cost_mat.at<float>(patch_coord.x, patch_coord.y)) {
-		cost_mat.at<float>(patch_coord.x, patch_coord.y) = proposed_cost;
-		nnf.at<cv::Vec2i>(patch_coord.x, patch_coord.y) = cv::Vec2i(source_patch_coord.x - patch_coord.x, source_patch_coord.y - source_patch.y);
+	if (proposed_cost < cost_mat.at<float>(patch_coord.y, patch_coord.x)) {
+		cost_mat.at<float>(patch_coord.y, patch_coord.x) = proposed_cost;
+		nnf.at<cv::Vec2i>(patch_coord.y, patch_coord.x) = cv::Vec2i(source_patch_coord.x - patch_coord.x, source_patch_coord.y - patch_coord.y);
 	}
 }
 

@@ -8,6 +8,9 @@ private:
 	cv::Mat nnf;
 	cv::Mat pixel_cost;
 
+	cv::Mat padded_source;
+	cv::Mat padded_target;
+
 	int patch_size = 7;
 
 public:
@@ -15,6 +18,8 @@ public:
 	void init(cv::Mat source, cv::Mat target);
 
 	void improveNNF(cv::Mat source, cv::Mat target, cv::Point patch_coord, cv::Point source_patch_coord, cv::Mat& nnf, cv::Mat& cost_mat);
+
+	void random_search();
 
 	cv::Mat nnf2img(cv::Mat nnf, cv::Mat s);
 
