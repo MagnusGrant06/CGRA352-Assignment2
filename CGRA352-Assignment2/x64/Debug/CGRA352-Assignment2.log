@@ -5,5 +5,5 @@ C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.c
 C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(39,33): warning C4244:         [
 C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(39,33): warning C4244:             _Tp=float
 C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(39,33): warning C4244:         ]
-C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(82,22): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(129,22): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
   CGRA352-Assignment2.vcxproj -> C:\Users\magnu\source\repos\CGRA352-Assignment2\x64\Debug\CGRA352-Assignment2.exe

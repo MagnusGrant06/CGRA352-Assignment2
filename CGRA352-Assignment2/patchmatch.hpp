@@ -19,7 +19,13 @@ public:
 
 	void improveNNF(cv::Mat source, cv::Mat target, cv::Point patch_coord, cv::Point source_patch_coord, cv::Mat& nnf, cv::Mat& cost_mat);
 
-	void random_search();
+	void random_search(int i, int j);
+
+	void propogate(int i, int j, int negative);
+
+	void iterate(int iteration_num);
+
+	void reconstruct_image();
 
 	cv::Mat nnf2img(cv::Mat nnf, cv::Mat s);
 
