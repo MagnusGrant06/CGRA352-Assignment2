@@ -1,4 +1,5 @@
 #include <iostream>
+#include <random>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc.hpp>
@@ -13,7 +14,11 @@ private:
 
 	int patch_size = 7;
 
+	std::mt19937 random;
+
 public:
+
+	PatchMatch();
 
 	void init(cv::Mat source, cv::Mat target);
 

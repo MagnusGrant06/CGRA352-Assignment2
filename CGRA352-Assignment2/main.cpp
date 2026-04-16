@@ -11,5 +11,6 @@ void main() {
 	PatchMatch* p = new PatchMatch();
 	p->init(source, target);
 	p->iterate(4);
+	p->output_info(source);
 	p->reconstruct_image();
 }
