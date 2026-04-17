@@ -15,7 +15,7 @@ private:
 
 	int iterations = 5;
 
-	int temp = 0;
+	int patch_num = 1;
 	
 	cv::Mat synthesis = source_img(
 		cv::Range(start_row, start_row + patch_size),
@@ -26,7 +26,10 @@ private:
 public:
 	void run_quilting();
 
+	void h_quilt(cv::Mat left_image, cv::Mat quilt, int overlap_size);
+
 	float calc_overlap_cost(cv::Mat left, cv::Mat right, int overlap_size);
 
-	void h_quilt(cv::Mat left_image, cv::Mat quilt, int overlap_size);
+	cv::Mat create_mask(cv::Mat left_overlap, cv::Mat right_overlap, int overlap_size);
+
 };
