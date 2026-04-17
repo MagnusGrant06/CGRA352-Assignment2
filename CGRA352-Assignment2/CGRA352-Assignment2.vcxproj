@@ -132,6 +132,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="imagequilting.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="patchmatch.cpp" />
   </ItemGroup>
@@ -146,6 +147,7 @@
     <Image Include="ToInpaint_Mask.jpg" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="imagequilting.hpp" />
     <ClInclude Include="patchmatch.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

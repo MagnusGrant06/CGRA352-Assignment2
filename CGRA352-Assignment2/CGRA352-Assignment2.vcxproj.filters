@@ -21,6 +21,9 @@
     <ClCompile Include="patchmatch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="imagequilting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="ToInpaint_Mask.jpg">
@@ -50,6 +53,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="patchmatch.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imagequilting.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
