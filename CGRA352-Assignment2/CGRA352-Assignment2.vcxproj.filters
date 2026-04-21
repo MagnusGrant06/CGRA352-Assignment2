@@ -24,6 +24,9 @@
     <ClCompile Include="imagequilting.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="imagereshuffling.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="ToInpaint_Mask.jpg">
@@ -56,6 +59,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="imagequilting.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imagereshuffling.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

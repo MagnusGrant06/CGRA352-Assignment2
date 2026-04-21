@@ -1,8 +1,6 @@
 #include "imagequilting.hpp"
 
-void ImageQuilting::run_quilting(int iters) {
-	iterations = iters;
-
+void ImageQuilting::run_quilting() {
 	//create canvas correct size of 5x patch then place first, fixed image
 	canvas = cv::Mat(patch_size, patch_size*iterations, CV_8UC3, cv::Scalar(0,0,0));
 	synthesis.copyTo(canvas(cv::Rect(0, 0, synthesis.rows, synthesis.cols)));

@@ -42,19 +42,62 @@ void PatchMatch::init(cv::Mat source, cv::Mat target) {
 	}
 }
 
+void PatchMatch::init_with_nnf(cv::Mat source, cv::Mat target, cv::Mat temp_nnf) {
+	cv::Mat temp_pixel_cost(target.rows, target.cols, CV_32FC1);
+
+	nnf = temp_nnf;
+	pixel_cost = temp_pixel_cost;
+
+	cv::copyMakeBorder(source, padded_source, 0, patch_size, 0, patch_size, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
+	cv::copyMakeBorder(target, padded_target, 0, patch_size, 0, patch_size, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
+
+	std::uniform_int_distribution<int> random_col(0, source.cols - patch_size);
+	std::uniform_int_distribution<int> random_row(0, source.rows - patch_size);
+
+	//assumes source and target are the same size
+	for (int i = 0; i < padded_source.rows - patch_size; i++) {
+		for (int j = 0; j < padded_source.cols - patch_size; j++) {
+			cv::Vec2i rand_source(random_col(random), random_row(random));
+
+			cv::Rect target_patch(j, i, patch_size, patch_size);
+			cv::Rect source_patch(rand_source[0], rand_source[1], patch_size, patch_size);
+
+			//calculate cost
+			int current_cost = cv::norm(padded_target(target_patch), padded_source(source_patch), cv::NORM_L2SQR);
+			pixel_cost.at<float>(i, j) = current_cost;
+		}
+	}
+}
+
+
 void PatchMatch::propogate(int i, int j, int negative) {
 	cv::Vec2i offset = nnf.at<cv::Vec2i>(i, j);
 
-	cv::Vec2i up_offset = nnf.at<cv::Vec2i>(i - 1*negative, j) + cv::Vec2i(1*negative, 0);
-	cv::Point up_source(
-		std::max(std::min(j + up_offset[1], padded_source.cols - patch_size), 0),
-		std::max(std::min(i + up_offset[0], padded_source.rows - patch_size), 0));
-	improveNNF(padded_source, padded_target, cv::Point(j, i), up_source, nnf, pixel_cost);
+	cv::Point up_source;
+	cv::Point left_source;
+	if (negative > 0) {
+		cv::Vec2i up_offset = nnf.at<cv::Vec2i>(i-1, j);
+		up_source = cv::Point(
+			std::max(std::min(j + up_offset[1], padded_source.cols - patch_size), 0),
+			std::max(std::min(i + up_offset[0], padded_source.rows - patch_size), 0));
 
-	cv::Vec2i left_offset = nnf.at<cv::Vec2i>(i,j-1*negative) + cv::Vec2i(0,1*negative);
-	cv::Point left_source(
-		std::max(std::min(j + left_offset[1],padded_source.cols - patch_size),0),
-		std::max(std::min(i + left_offset[0], padded_source.rows - patch_size),0));
+		cv::Vec2i left_offset = nnf.at<cv::Vec2i>(i, j - 1);
+		left_source = cv::Point(
+			std::max(std::min(j + left_offset[1], padded_source.cols - patch_size), 0),
+			std::max(std::min(i + left_offset[0], padded_source.rows - patch_size), 0));
+	}
+	else {
+		cv::Vec2i up_offset = nnf.at<cv::Vec2i>(i + 1, j);
+		up_source = cv::Point(
+			std::max(std::min(j + up_offset[1], padded_source.cols - patch_size), 0),
+			std::max(std::min(i + up_offset[0], padded_source.rows - patch_size), 0));
+
+		cv::Vec2i left_offset = nnf.at<cv::Vec2i>(i, j + 1);
+		left_source = cv::Point(
+			std::max(std::min(j + left_offset[1], padded_source.cols - patch_size), 0),
+			std::max(std::min(i + left_offset[0], padded_source.rows - patch_size), 0));
+	}
+	improveNNF(padded_source, padded_target, cv::Point(j, i), up_source, nnf, pixel_cost);
 	improveNNF(padded_source, padded_target, cv::Point(j, i), left_source, nnf, pixel_cost);
 
 }
@@ -71,8 +114,8 @@ void PatchMatch::random_search(int i, int j) {
 		std::uniform_int_distribution<int> random_row(-row_radius, row_radius);
 
 		cv:: Point rand_point(
-			std::max(std::min(source_x + random_col(random), padded_target.cols - patch_size), 0),
-			std::max(std::min(source_y + random_row(random), padded_target.rows - patch_size), 0));
+			std::max(std::min(source_x + random_col(random), padded_source.cols - patch_size), 0),
+			std::max(std::min(source_y + random_row(random), padded_source.rows - patch_size), 0));
 		
 
 		improveNNF(padded_source, padded_target, cv::Point(j, i), rand_point, nnf, pixel_cost);
@@ -86,7 +129,7 @@ void PatchMatch::random_search(int i, int j) {
 void PatchMatch::iterate(int iteration_num) {
 
 	for (int iteration = 0; iteration < iteration_num; iteration++) {
-		if (iteration % 2 != 0) {
+		if (iteration % 2 == 0) {
 			for (int i = padded_source.rows - patch_size-2; i > 1; i--) {
 				for (int j = padded_source.cols - patch_size-2; j > 1; j--) {
 					propogate(i, j, -1);
@@ -102,23 +145,37 @@ void PatchMatch::iterate(int iteration_num) {
 				}
 			}	
 		}
-		std::cout << cv::mean(pixel_cost)[0] << std::endl;
 	}
 }
 
-void PatchMatch::reconstruct_image() {
+//improved reconstruct image method that replaces the one used for core for use in completion
+cv::Mat PatchMatch::reconstruct_image() {
+	cv::Mat accumulator = cv::Mat::zeros(padded_target.size(), CV_32FC3);
+	cv::Mat weight = cv::Mat::zeros(padded_target.size(), CV_32FC1);
 
 	for (int i = 1; i < padded_source.rows - patch_size-2; i++) {
 		for (int j = 1; j < padded_source.cols - patch_size-2; j++) {
 			int offset_x = std::clamp(i + nnf.at<cv::Vec2i>(i, j)[0],0,padded_source.rows-patch_size);
 			int offset_y = std::clamp(j + nnf.at<cv::Vec2i>(i, j)[1], 0, padded_source.cols - patch_size);
-			padded_target.at<cv::Vec3b>(i, j) = padded_source.at<cv::Vec3b>(offset_x, offset_y);
+			for (int di = 0; di < patch_size; di++) {
+				for (int dj = 0; dj < patch_size; dj++) {
+					accumulator.at<cv::Vec3f>(i + di, j + dj) += padded_source.at<cv::Vec3b>(offset_x + di, offset_y + dj);
+					weight.at<float>(i + di, j + dj) += 1.0f;
+				}
+			}
+		}
+	}
+
+	for (int i = 0; i < padded_target.rows; i++) {
+		for (int j = 0; j < padded_target.cols; j++) {
+			if (weight.at<float>(i, j) > 0) {
+				padded_target.at<cv::Vec3b>(i, j) = accumulator.at<cv::Vec3f>(i, j) / weight.at<float>(i, j);
+			}
 		}
 	}
 	//remove border used to eliminate patches going out of bounds
 	cv::Mat unpadded_output = padded_target(cv::Rect(0, 0, padded_source.cols - patch_size, padded_source.rows - patch_size));
-	cv::imshow("ojads", unpadded_output);
-	cv::waitKey(0);
+	return unpadded_output;
 }
 
 //simple method to compare patches, assumes they are padded
@@ -155,4 +212,8 @@ cv::Mat PatchMatch::nnf2img(cv::Mat nnf, cv::Mat s) {
 		}
 	}
 	return nnf_img;
+}
+
+cv::Mat PatchMatch::get_nnf() {
+	return nnf;
 }

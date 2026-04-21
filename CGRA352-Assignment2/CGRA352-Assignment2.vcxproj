@@ -133,6 +133,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="imagequilting.cpp" />
+    <ClCompile Include="imagereshuffling.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="patchmatch.cpp" />
   </ItemGroup>
@@ -148,6 +149,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imagequilting.hpp" />
+    <ClInclude Include="imagereshuffling.hpp" />
     <ClInclude Include="patchmatch.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

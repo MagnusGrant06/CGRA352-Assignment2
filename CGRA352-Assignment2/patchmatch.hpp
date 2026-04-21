@@ -22,6 +22,8 @@ public:
 
 	void init(cv::Mat source, cv::Mat target);
 
+	void init_with_nnf(cv::Mat source, cv::Mat target, cv::Mat nnf);
+
 	void improveNNF(cv::Mat source, cv::Mat target, cv::Point patch_coord, cv::Point source_patch_coord, cv::Mat& nnf, cv::Mat& cost_mat);
 
 	void random_search(int i, int j);
@@ -30,9 +32,11 @@ public:
 
 	void iterate(int iteration_num);
 
-	void reconstruct_image();
+	cv::Mat reconstruct_image();
 
-	cv::Mat nnf2img(cv::Mat nnf, cv::Mat s);
+	static cv::Mat nnf2img(cv::Mat nnf, cv::Mat s);
 
 	void output_info(cv::Mat source);
+
+	cv::Mat get_nnf();
 };
