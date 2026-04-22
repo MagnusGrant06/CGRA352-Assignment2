@@ -10,15 +10,24 @@ private:
 	cv::Mat source, target;
 	cv::Mat initial_nnf;
 
-	std::vector<cv::Mat> source_pyr, target_pyr, nnf_pyr;
+	std::vector<cv::Mat> source_pyr, target_pyr, nnf_pyr, mask_pyr;
 
-	int patch_size = 7;
+	int patch_size;
 	int patchmatch_iter = 3;
 	int pyramid_depth = 4;
 	int correction_iter = 4;
+
+	bool inpainting;
 public:
 
 	void init(cv::Mat source, cv::Mat target);
+
+	void init_for_inpainting(cv::Mat source, cv::Mat target);
+
 	void create_pyramid_nnfs();
+
 	cv::Mat upsample_nnf(cv::Mat nnf, cv::Mat next);
+
+	cv::Mat downsample_nnf(cv::Mat nnf, cv::Mat next);
+
 };

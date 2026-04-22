@@ -18,7 +18,7 @@ private:
 
 public:
 
-	PatchMatch();
+	PatchMatch(int patch_size);
 
 	void init(cv::Mat source, cv::Mat target);
 

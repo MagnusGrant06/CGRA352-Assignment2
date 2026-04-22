@@ -1,2 +1,18 @@
-﻿  imagereshuffling.cpp
+﻿  main.cpp
+C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\main.cpp(11,6): warning C4326: return type of 'main' should be 'int' instead of 'void'
+  patchmatch.cpp
+C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(41,21): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(42,33): warning C4244: '=': conversion from 'int' to '_Tp', possible loss of data
+C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(42,33): warning C4244:         with
+C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(42,33): warning C4244:         [
+C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(42,33): warning C4244:             _Tp=float
+C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(42,33): warning C4244:         ]
+C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(65,21): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(66,33): warning C4244: '=': conversion from 'int' to '_Tp', possible loss of data
+C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(66,33): warning C4244:         with
+C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(66,33): warning C4244:         [
+C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(66,33): warning C4244:             _Tp=float
+C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(66,33): warning C4244:         ]
+C:\Users\magnu\source\repos\CGRA352-Assignment2\CGRA352-Assignment2\patchmatch.cpp(189,22): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  Generating Code...
   CGRA352-Assignment2.vcxproj -> C:\Users\magnu\source\repos\CGRA352-Assignment2\x64\Debug\CGRA352-Assignment2.exe

@@ -1,10 +1,11 @@
 #include <random>
 #include "patchmatch.hpp"
 
-PatchMatch::PatchMatch() : random(std::random_device{}()) {}
+PatchMatch::PatchMatch(int patch_size) : patch_size(patch_size), random(std::random_device{}()) {}
 
 void PatchMatch::output_info(cv::Mat source) {
 	cv::imshow("yeah",nnf2img(nnf, source));
+	cv::imshow("oajsdja", reconstruct_image());
 	cv::waitKey(0);
 
 }
@@ -17,6 +18,7 @@ void PatchMatch::init(cv::Mat source, cv::Mat target) {
 	nnf = temp_nnf;
 	pixel_cost = temp_pixel_cost;
 
+	//pad border around images to avoid patches going out of bounds
 	cv::copyMakeBorder(source, padded_source, 0, patch_size, 0, patch_size, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
 	cv::copyMakeBorder(target, padded_target, 0, patch_size, 0, patch_size, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
 
@@ -42,40 +44,37 @@ void PatchMatch::init(cv::Mat source, cv::Mat target) {
 	}
 }
 
+//method for initializing with a static nnf for image shuffling and infilling
 void PatchMatch::init_with_nnf(cv::Mat source, cv::Mat target, cv::Mat temp_nnf) {
-	cv::Mat temp_pixel_cost(target.rows, target.cols, CV_32FC1);
+    nnf = temp_nnf.clone();
+    pixel_cost = cv::Mat(target.rows, target.cols, CV_32FC1, cv::Scalar(FLT_MAX));
 
-	nnf = temp_nnf;
-	pixel_cost = temp_pixel_cost;
+    cv::copyMakeBorder(source, padded_source, 0, patch_size, 0, patch_size, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
+    cv::copyMakeBorder(target, padded_target, 0, patch_size, 0, patch_size, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
 
-	cv::copyMakeBorder(source, padded_source, 0, patch_size, 0, patch_size, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
-	cv::copyMakeBorder(target, padded_target, 0, patch_size, 0, patch_size, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
+    for (int i = 0; i < target.rows; i++) {
+        for (int j = 0; j < target.cols; j++) {
+            cv::Vec2i abs_pos = nnf.at<cv::Vec2i>(i, j);
+            int si = std::clamp(abs_pos[0] + i, 0, padded_source.rows - patch_size - 1);
+            int sj = std::clamp(abs_pos[1] + j, 0, padded_source.cols - patch_size - 1);
 
-	std::uniform_int_distribution<int> random_col(0, source.cols - patch_size);
-	std::uniform_int_distribution<int> random_row(0, source.rows - patch_size);
-
-	//assumes source and target are the same size
-	for (int i = 0; i < padded_source.rows - patch_size; i++) {
-		for (int j = 0; j < padded_source.cols - patch_size; j++) {
-			cv::Vec2i rand_source(random_col(random), random_row(random));
-
-			cv::Rect target_patch(j, i, patch_size, patch_size);
-			cv::Rect source_patch(rand_source[0], rand_source[1], patch_size, patch_size);
+            cv::Rect target_patch(j, i, patch_size, patch_size);
+            cv::Rect source_patch(sj, si, patch_size, patch_size);
 
 			//calculate cost
 			int current_cost = cv::norm(padded_target(target_patch), padded_source(source_patch), cv::NORM_L2SQR);
 			pixel_cost.at<float>(i, j) = current_cost;
-		}
-	}
+        }
+    }
 }
 
-
+//propogate to the neigbors up and left on first pass and down and right on second pass
 void PatchMatch::propogate(int i, int j, int negative) {
 	cv::Vec2i offset = nnf.at<cv::Vec2i>(i, j);
 
 	cv::Point up_source;
 	cv::Point left_source;
-	if (negative > 0) {
+	if (negative > 0) {  //passed in from iterate() to say when to check correct neighbors
 		cv::Vec2i up_offset = nnf.at<cv::Vec2i>(i-1, j);
 		up_source = cv::Point(
 			std::max(std::min(j + up_offset[1], padded_source.cols - patch_size), 0),
@@ -97,15 +96,17 @@ void PatchMatch::propogate(int i, int j, int negative) {
 			std::max(std::min(j + left_offset[1], padded_source.cols - patch_size), 0),
 			std::max(std::min(i + left_offset[0], padded_source.rows - patch_size), 0));
 	}
+
 	improveNNF(padded_source, padded_target, cv::Point(j, i), up_source, nnf, pixel_cost);
 	improveNNF(padded_source, padded_target, cv::Point(j, i), left_source, nnf, pixel_cost);
 
 }
 
+//randomly search image in current radius to find best matching patch
 void PatchMatch::random_search(int i, int j) {
-
 	int row_radius = padded_target.rows;
-	int col_radius = padded_target.cols;
+	int col_radius =  padded_target.cols;
+
 	while (row_radius >= 1 || col_radius >= 1) {
 		if (row_radius < patch_size || col_radius < patch_size) break;
 		int source_x = j + nnf.at<cv::Vec2i>(i, j)[1];
@@ -120,12 +121,12 @@ void PatchMatch::random_search(int i, int j) {
 
 		improveNNF(padded_source, padded_target, cv::Point(j, i), rand_point, nnf, pixel_cost);
 
-		row_radius /= 2;
+		row_radius /= 2;  //reduce search radius by half each iteration
 		col_radius /= 2;
-			}
-			
+		}	
 }
 
+//loop through each pixel and  propogate and iterate
 void PatchMatch::iterate(int iteration_num) {
 
 	for (int iteration = 0; iteration < iteration_num; iteration++) {
@@ -188,8 +189,8 @@ void PatchMatch::improveNNF(cv::Mat source, cv::Mat target, cv::Point patch_coor
 	float proposed_cost = cv::norm(padded_source(source_patch), padded_target(target_patch), cv::NORM_L2SQR);
 
 	if (proposed_cost < cost_mat.at<float>(patch_coord.y, patch_coord.x)) {
-		cost_mat.at<float>(patch_coord.y, patch_coord.x) = proposed_cost;
-		nnf.at<cv::Vec2i>(patch_coord.y, patch_coord.x) = cv::Vec2i(source_patch_coord.y - patch_coord.y, source_patch_coord.x - patch_coord.x);
+		cost_mat.at<float>(patch_coord.y, patch_coord.x) = proposed_cost; //change cost to new cost if better
+		nnf.at<cv::Vec2i>(patch_coord.y, patch_coord.x) = cv::Vec2i(source_patch_coord.y - patch_coord.y, source_patch_coord.x - patch_coord.x); //change nnf offset to new offset if better
 	}
 }
 

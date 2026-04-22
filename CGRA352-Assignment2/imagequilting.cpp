@@ -37,7 +37,7 @@ void ImageQuilting::h_quilt(cv::Mat left, cv::Mat right, int overlap_size) {
 	cv::Mat mask = create_mask(left_overlap, right_overlap, overlap_size);
 
 	synthesis = right;
-	right.copyTo(canvas(cv::Rect((patch_size-overlap)*patch_num,0,patch_size,patch_size)), mask);
+	right.copyTo(canvas(cv::Rect((patch_size-overlap)*patch_num,0,patch_size,patch_size)), mask); //add new image onto canvas using mask created earlier
 	patch_num++;
 }
 
